@@ -1,0 +1,7 @@
+FastAPI
+pandas
+cairosvg
+aiocache
+aliyun_log_python_sdk
+duckdb-engine
+streamdeck
