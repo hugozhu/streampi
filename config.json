@@ -1,0 +1,23 @@
+{
+    "scences":
+        [
+            [
+                {"type": "ClockPlugin", "name": "Clock Plugin", "timezone": "Asia/Tokyo"},
+                {"type": "ClockPlugin", "name": "Clock Plugin", "timezone": "America/Los_Angeles"},
+                {"type": "BtcPlugin", "name": "BTC Plugin", "title": "BTC"},
+                {"type": "BrightPlugin", 
+                    "name": "Bright ++", 
+                    "image": "./Assets/bright_on.png", 
+                    "step": 10, 
+                    "background": "#7c4487" 
+                },
+                {"type": "BrightPlugin", 
+                    "name": "Bright --", 
+                    "image": "./Assets/bright_off.png", 
+                    "step": -10, 
+                    "background": "#7c4487" 
+                },
+                {"type": "NextPagePlugin", "name": "Next Page Plugin"}
+            ]
+        ]    
+}

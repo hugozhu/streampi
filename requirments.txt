@@ -1,7 +1,7 @@
-FastAPI
+fastapi[standard]
 pandas
 cairosvg
 aiocache
 aliyun_log_python_sdk
-duckdb-engine
+#duckdb-engine
 streamdeck
