@@ -11,8 +11,13 @@
         }
     },    
     "plugins":[
-
-    ],
+        {
+            "type": "UptimePlugin", 
+            "url": "<your_url>",
+            "username": "",
+            "password": ""
+        }
+    ], 
     "scenes":
         [
             [
