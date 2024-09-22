@@ -1,5 +1,15 @@
 {    
-    "port": 8001,
+    "server_port": 8001,
+    "device_model": "streamdock",
+    "text_setting": {
+        "max_lines": 5,
+        "fonts": {
+            "tiny_font": 16,
+            "small_font": 18,
+            "medium_font": 20,
+            "bold_font": 24
+        }
+    },    
     "plugins":[
 
     ],

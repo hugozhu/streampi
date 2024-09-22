@@ -1,21 +1,14 @@
 import os, logging, json
 import asyncio
 import time
-from contextlib import asynccontextmanager
-
-from io import BytesIO
-from PIL import Image
-from StreamDeck.DeviceManager import DeviceManager
-from StreamDeck.ImageHelpers import PILHelper
 
 from plugins import StreamDeck, PLUGIN_CLASSES
 
 logger = logging.getLogger("asyncio")
 
 my_deck = None
-scences = [0 for _ in range(6)]
 scence_index = 0
-deck_keys = [0 for _ in range(6)]
+deck_keys = [0 for _ in range(32)]
 key_press_times = {}
 tasks = []
 last_key_up_task = None
@@ -32,6 +25,10 @@ def create_plugin(plugin_type, **kwargs):
 def init_from_json(json_data):
     plugin_global_config = {} #plugin type str -> dict
     plugin_pages = []
+
+    #set up how to show text on key image
+    StreamDeck.initialize(config['text_setting'])
+
     for plugin_config in json_data['plugins']:
         plugin_type = plugin_config.pop("type")
         plugin_global_config[plugin_type] = plugin_config
@@ -53,6 +50,13 @@ def load_json_file(file_path):
 
 config = load_json_file('./config.json')
 scences = init_from_json(config)
+
+if config.get("device_model") == 'streamdeck':
+    from StreamDeck.DeviceManager import DeviceManager
+    from StreamDeck.ImageHelpers import PILHelper
+else:
+    from StreamDock.DeviceManager import DeviceManager
+    from StreamDock.ImageHelpers import PILHelper
 
 async def delay_and_key_up(p, deck_keys, key):
     await asyncio.sleep(DOUBLE_KEY_INTERVAL)  # Wait for 0.3 seconds
@@ -146,14 +150,13 @@ async def start():
     streamdecks = DeviceManager().enumerate()    
     print("Found {} Stream Deck(s).\n".format(len(streamdecks)))
     for index, deck in enumerate(streamdecks):
-        # This example only works with devices that have screens.
-        if not deck.is_visual():
-            continue
-
         my_deck = deck
-        
+        print(f"Device {index+1} Class Name: {deck.__class__.__name__}, Model Type: {deck.__module__}")
         deck.open()
-        deck.reset()
+        if deck.__module__.startswith("StreamDock"):
+            deck.clearAllIcon()
+        else:
+            deck.reset()
         deck.set_brightness(StreamDeck.bright_level)
         deck.set_key_callback_async(key_change_callback)
          
@@ -167,10 +170,10 @@ async def start():
         return
 
 def stop():
-    global my_deck    
-    my_deck.reset()
-    # Close deck handle, terminating internal worker threads.
-    my_deck.close()
+    global my_deck 
+    if my_deck:   
+        # Close deck handle, terminating internal worker threads.
+        my_deck.close()
 
 if __name__ == "__main__":
     asyncio.run(start())

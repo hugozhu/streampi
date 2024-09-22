@@ -75,6 +75,7 @@ class ClockPlugin(StreamDeckPlugin):
     def __init__(self, timezone: str = "Asia/Shanghai",  **data):
         super().__init__(**data)
         self.timezone = timezone
+        self.text_vertical_alignment = "top"
 
     async def update_deck(self, deck):        
         data = await output(self.timezone)        

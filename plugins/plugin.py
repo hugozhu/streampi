@@ -1,5 +1,5 @@
 from typing import List, Optional, Any, ClassVar
-from pydantic import BaseModel, validator, ValidationError
+from pydantic import BaseModel, ValidationError
 from pydantic.fields import Field
 from aiocache import cached, Cache
 import asyncio 
@@ -53,6 +53,7 @@ class StreamDeckPlugin(BaseModel):
     image: Any = Field(default=None)
     background: str = "black"
     highlight_color: str = "yellow"
+    text_vertical_alignment: str = "center"
     margins: List[int] = Field(default_factory=lambda: [0, 0, 0, 0])
     
     data: dict = Field(default_factory=dict)
@@ -66,7 +67,12 @@ class StreamDeckPlugin(BaseModel):
     
     def update_screen(self, deck):
         if not self.stop:            
-            deck.update_screen(self.title, self.image, self.margins, self.background, self.highlight_color)
+            deck.update_screen(self.title, 
+                self.image, 
+                self.margins, 
+                self.background, 
+                self.highlight_color,
+                self.text_vertical_alignment)
     
     # event when the plugin start display on key
     async def on_will_appear(self, deck) -> None:
