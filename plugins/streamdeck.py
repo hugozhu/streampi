@@ -17,7 +17,7 @@ class TextSetting:
     def initialize_fonts(cls, config):
         if not cls._initialized:
             cls.tiny_font = ImageFont.truetype("./Assets/Arial-Unicode-Bold.ttf", config['fonts']['tiny_font'])
-            cls.small_font = ImageFont.truetype("./Assets/Arial-Unicode.ttf", config['fonts']['small_font'])
+            cls.small_font = ImageFont.truetype("./Assets/Arial-Unicode-Bold.ttf", config['fonts']['small_font'])
             cls.medium_font = ImageFont.truetype("./Assets/Arial-Unicode-Bold.ttf", config['fonts']['medium_font'])
             cls.bold_font = ImageFont.truetype("./Assets/Arial-Unicode-Bold.ttf", config['fonts']['bold_font'])
             cls.max_lines = config.get("max_lines", 4)
@@ -70,7 +70,7 @@ class StreamDeck(BaseModel):
             print(e)
 
 def _draw_text(image, label_text, highlight_color, text_vertical_alignment="center"):
-        draw = ImageDraw.Draw(image)
+        draw = ImageDraw.Draw(image)        
         y = 0
         if label_text:
             lines = label_text.split("\n")
@@ -85,7 +85,6 @@ def _draw_text(image, label_text, highlight_color, text_vertical_alignment="cent
                         lines = lines[-max_lines:]  # Keep only the last 5 lines 
 
             for index, line in enumerate(lines):
-                # _, _, text_width, text_height = draw.textbbox((0, 0), label_text, font=font)
                 x = (image.width) // 2
                 color = "white"
                 if index == 0:
@@ -112,5 +111,5 @@ def _draw_text(image, label_text, highlight_color, text_vertical_alignment="cent
 def _is_svg(svg_string):
     if isinstance(svg_string, str):
         svg_string = svg_string.strip()
-        return svg_string.startswith('<svg') and svg_string.endswith('</svg>')
+        return svg_string.startswith('<') and svg_string.endswith('</svg>')
     return False

@@ -15,7 +15,8 @@
             "type": "UptimePlugin", 
             "url": "<your_url>",
             "username": "",
-            "password": ""
+            "password": "",
+            "interval": 60            
         }
     ], 
     "scenes":
@@ -23,14 +24,22 @@
             [
                 {"type": "ClockPlugin", "name": "Clock Plugin", "timezone": "Asia/Shanghai"},
                 {"type": "ClockPlugin", "name": "Clock Plugin", "timezone": "America/Los_Angeles"},
-                {"type": "BtcPlugin", "name": "BTC Plugin", "title": "BTC"},
-                {"type": "BrightPlugin", 
+                {  
+                    "type": "BtcPlugin",
+                    "name": "BTC Plugin", 
+                    "title": "BTC", 
+                    "interval": 300,
+                    "image": "./Assets/btc.png"
+                },
+                {
+                    "type": "BrightPlugin", 
                     "name": "Bright ++", 
                     "image": "./Assets/bright_on.png", 
                     "step": 10, 
                     "background": "#7c4487" 
                 },
-                {"type": "BrightPlugin", 
+                {
+                    "type": "BrightPlugin", 
                     "name": "Bright --", 
                     "image": "./Assets/bright_off.png", 
                     "step": -10, 

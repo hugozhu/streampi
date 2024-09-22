@@ -50,10 +50,12 @@ class DataFetcher:
 class StreamDeckPlugin(BaseModel):
     name: Optional[str] = None
     title: Optional[str] = None
+    interval: int = 3000 # Default interval set to 3000 seconds    
     image: Any = Field(default=None)
     background: str = "black"
     highlight_color: str = "yellow"
     text_vertical_alignment: str = "center"
+    
     margins: List[int] = Field(default_factory=lambda: [0, 0, 0, 0])
     
     data: dict = Field(default_factory=dict)
@@ -65,6 +67,12 @@ class StreamDeckPlugin(BaseModel):
     async def fetch_urls(self, urls_with_data, timeout=10, max_retries=2):
         return await DataFetcher.fetch_urls(urls_with_data, timeout, max_retries)
     
+    def info(self, msg, *args, **kwargs):
+        logger.info(msg, *args, **kwargs)
+
+    def error(self, msg, *args, **kwargs):
+        logger.error(msg, *args, **kwargs)
+
     def update_screen(self, deck):
         if not self.stop:            
             deck.update_screen(self.title, 
