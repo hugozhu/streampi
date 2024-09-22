@@ -30,11 +30,18 @@ def create_plugin(plugin_type, **kwargs):
     return plugin_class(**kwargs)
 
 def init_from_json(json_data):
+    plugin_global_config = {} #plugin type str -> dict
     plugin_pages = []
-    for page in json_data:
+    for plugin_config in json_data['plugins']:
+        plugin_type = plugin_config.pop("type")
+        plugin_global_config[plugin_type] = plugin_config
+
+    for page in json_data['scenes']:
         plugins = []
         for plugin_config in page:
-            plugin_type = plugin_config.pop("type")
+            plugin_type = plugin_config.get("type") or "DummyPlugin"                
+            if plugin_type in plugin_global_config:
+                plugin_config.update(plugin_global_config[plugin_type])
             plugin = create_plugin(plugin_type, **plugin_config)
             plugins.append(plugin)
         plugin_pages.append(plugins)
@@ -43,10 +50,9 @@ def init_from_json(json_data):
 def load_json_file(file_path):
     with open(file_path, 'r') as file:
         return json.load(file)
-    return {}
 
 config = load_json_file('./config.json')
-scences = init_from_json(config.get('scences'))
+scences = init_from_json(config)
 
 async def delay_and_key_up(p, deck_keys, key):
     await asyncio.sleep(DOUBLE_KEY_INTERVAL)  # Wait for 0.3 seconds
