@@ -1,7 +1,6 @@
 # streampi
 https://blog.hugozhu.site
 
-
 # 使用Raspberry Pi和Streamdeck监控云原生大数据系统的稳定性
 
 关键词：Raspberry Pi, StreamDeck, Uptime Kuma, DuckDB, Airflow, Aliyun SLS, DingTalk, Clickhouse, DataWorks, Grafana

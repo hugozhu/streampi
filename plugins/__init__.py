@@ -13,10 +13,10 @@ for filename in os.listdir(os.path.dirname(__file__)):
     if filename.endswith("_plugin.py"):            
         module_name = filename[:-3]  # Remove the '.py' extension
         module = importlib.import_module(f"plugins.{module_name}", package=__name__)
-        plugin_class_name = convert_to_camel_case(module_name.capitalize())
+        plugin_class_name = convert_to_camel_case(module_name)
         plugin_class = getattr(module, plugin_class_name, None)
         if plugin_class:
-            print("Loading plugin...", plugin_class_name, plugin_class)
+            print("Loading streampi plugin: ", plugin_class_name, plugin_class)
             PLUGIN_CLASSES[plugin_class_name] = plugin_class
 
 __all__ = [
