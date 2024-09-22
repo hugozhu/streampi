@@ -1,9 +1,10 @@
-# streampi
+# streampi - fast response system monitor with low cost
+
 https://blog.hugozhu.site
 
 # 使用Raspberry Pi和Streamdeck监控云原生大数据系统的稳定性
 
-关键词：Raspberry Pi, StreamDeck, Uptime Kuma, DuckDB, Airflow, Aliyun SLS, DingTalk, Clickhouse, DataWorks, Grafana
+**关键词**：Raspberry Pi, StreamDeck, Uptime Kuma, DuckDB, Airflow, Aliyun SLS, DingTalk, Clickhouse, DataWorks, Grafana
 
 ## 引言
 
@@ -30,5 +31,13 @@ StreamDeck 是一款可编程的硬件设备，最初设计用于流媒体控制
 ```bash
 conda create -n streampi
 conda install pip
-pip -r reqirements.txt
+pip -r reqirements.txt --upgrade
+fastapi --version
+```
+
+## 启动程序
+
+```bash
+copy config_sample.json config.json
+fastapi run --port 8000
 ```

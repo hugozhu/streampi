@@ -1,5 +1,9 @@
-{
-    "scences":
+{    
+    "port": 8001,
+    "plugins":[
+
+    ],
+    "scenes":
         [
             [
                 {"type": "ClockPlugin", "name": "Clock Plugin", "timezone": "Asia/Shanghai"},

@@ -5,3 +5,4 @@ aiocache
 aliyun_log_python_sdk
 #duckdb-engine
 streamdeck
+uptime_kuma_api
