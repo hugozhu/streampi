@@ -7,7 +7,7 @@ from routers import streamdeck
 import asyncio
 import traceback
 import uvicorn
-from cli import start as stream_deck_start, stop as stream_deck_stop, next_page, set_bright_level
+from cli import start as stream_deck_start, stop as stream_deck_stop, next_page, screen_on, screen_off
 from contextlib import asynccontextmanager
 
 logger = logging.getLogger("streamdeck")
@@ -41,11 +41,11 @@ async def health_check():
 
 @app.get("/admin/lcd_on")
 async def lcd_on():
-    await set_bright_level(60)
+    await screen_on()
 
 @app.get("/admin/lcd_off")
 async def lcd_off():
-    await set_bright_level(0)
+    await screen_off()
 
 @app.get("/admin/up")
 async def up():

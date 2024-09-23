@@ -51,6 +51,12 @@ pip -r reqirements.txt --upgrade
 fastapi --version
 ```
 
+## 重置USB设备
+
+```bash
+sudo usbreset 001/015
+```
+
 ## 启动程序
 
 ```bash

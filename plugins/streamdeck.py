@@ -97,6 +97,7 @@ def _draw_text(image, label_text, highlight_color, text_vertical_alignment="cent
                     f = TextSetting.small_font
                     y += f.size
                 elif index == 3:
+                    f = TextSetting.tiny_font
                     color = highlight_color
                     y += f.size
                 elif index == 4:

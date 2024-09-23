@@ -2,6 +2,7 @@ from .plugin import StreamDeckPlugin
 import asyncio
 
 class BtcPlugin(StreamDeckPlugin):
+    key_up_count: int = 0    
     def __init__(self, **data):
         super().__init__(**data)
     
@@ -13,7 +14,11 @@ class BtcPlugin(StreamDeckPlugin):
         self.update_screen(deck)
         data = await self.fetch_btc_data()
         if data:
-            self.title = f"{int(data['last_trade_price'])} $\n\n24H:\n{int(data['price_24h'])} $"
+            # print(data)
+            if self.key_up_count % 2 ==0:
+                self.title = f"{int(data['last_trade_price'])} $\n\n24H:\n{int(data['price_24h'])} $"
+            else:
+                self.title = f"\n{data['symbol']}\n\nVolume 24H:\n{data['volume_24h']}"
             self.update_screen(deck)
 
     async def run(self, deck):
@@ -29,4 +34,5 @@ class BtcPlugin(StreamDeckPlugin):
         pass
 
     async def on_key_up(self, deck) -> None:
+        self.key_up_count = self.key_up_count + 1
         await self.update_deck(deck) 

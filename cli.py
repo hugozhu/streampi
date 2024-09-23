@@ -154,6 +154,7 @@ async def start():
         print(f"Device {index+1} Class Name: {deck.__class__.__name__}, Model Type: {deck.__module__}")
         deck.open()
         if deck.__module__.startswith("StreamDock"):
+            deck.set_seconds(60 * 60 * 4)
             deck.clearAllIcon()
         else:
             deck.reset()
@@ -168,6 +169,24 @@ async def start():
             task = asyncio.create_task(p.on_will_appear(deck_keys[index]))        
             tasks.append(task)
         return
+
+#唤醒屏幕
+def screen_on():
+    global my_deck
+    if my_deck.__module__.startswith("StreamDock"):
+        my_deck.screen_On()
+    else:
+        set_bright_level(60)
+    
+
+#息屏
+def screen_off():
+    global my_deck    
+    if my_deck.__module__.startswith("StreamDock"):
+        my_deck.screen_Off()
+    else:
+        set_bright_level(0)
+    
 
 def stop():
     global my_deck 
