@@ -176,21 +176,22 @@ async def start():
         return
 
 #唤醒屏幕
-def screen_on():
+async def screen_on():
     global my_deck
     if my_deck.__module__.startswith("StreamDock"):
         my_deck.screen_On()
     else:
-        set_bright_level(60)
+        await set_bright_level(60)
     
 
 #息屏
-def screen_off():
-    global my_deck    
+async def screen_off():
+    global my_deck
     if my_deck.__module__.startswith("StreamDock"):
         my_deck.screen_Off()
     else:
-        set_bright_level(0)
+        await set_bright_level(0)
+
     
 
 def stop():
