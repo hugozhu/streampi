@@ -83,7 +83,7 @@ def _draw_text(image, label_text, highlight_color, text_vertical_alignment="cent
                         lines[-1] = x                
                     else:
                         lines = lines[-max_lines:]  # Keep only the last 5 lines 
-
+   
             for index, line in enumerate(lines):
                 x = (image.width) // 2
                 color = "white"

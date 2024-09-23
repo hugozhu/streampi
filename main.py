@@ -55,9 +55,13 @@ async def up():
 async def down():
     stream_deck_stop()
 
+@app.get("/admin/prev")
+async def prev():
+    await next_page(-1)
+
 @app.get("/admin/next")
 async def next():
-    await next_page()
+    await next_page(1)
 
 def main():
     import argparse

@@ -7,7 +7,7 @@ from pydantic import Field
 from typing import ClassVar
 import asyncio
 from datetime import datetime
-
+import traceback 
 
 def convert_to_multiple_lines(text: str, max_lines: int = 4) -> str:
     lines = text.split(" ")
@@ -40,13 +40,20 @@ class UptimePlugin(StreamDeckPlugin):
                         ping = f"{node.ping} ms"                      
                         name = self.name
                         
+                        if node.uptime_in_24 < 0.8:
+                            self.background = "red"
+                        elif int(node.uptime_in_24) == 1:
+                            self.background = "black"
+                        else:
+                            self.background = "#999900"
+
                         if self.key_up_count % 2 == 0:
-                            self.title = f"{uptime_in_24}\n\n{uptime_in_720}\n{node.msg}\n{name}"
+                            self.title = f"{uptime_in_24}\n{uptime_in_720}\n{node.msg}\n{name}"
                         else:
                             if pd.isna(node.parent):
                                 self.title = f"{convert_to_multiple_lines(node.msg)}\n{name}"
                             else:
-                                self.title = f"Ping:\n{ping}\n\nDown: {down_count}\n{name}"
+                                self.title = f"Ping:\n{ping}\nDown: {down_count}\n{name}"
                     else:
                         self.title = "\nLoading...\n"+self.title
                 else:
@@ -59,7 +66,7 @@ class UptimePlugin(StreamDeckPlugin):
                     else:
                         self.background = "black"
                     if self.key_up_count % 2 == 0:
-                        self.title = f"Succ: {succ_count}\n\nErr: {err_count}\n{self.name}"
+                        self.title = f"Succ: {succ_count}\nErr: {err_count}\n{self.name}"
                     else:
                         if not error_monitors.empty:
                             node = error_monitors.iloc[0]
@@ -71,12 +78,14 @@ class UptimePlugin(StreamDeckPlugin):
                 self.title = "\nLoading...\n"+self.title
         except Exception as e:
             print(e)
+            traceback.print_exc() 
+            
         self.update_screen(deck)
 
-    async def run(self, deck):        
+    async def run(self, deck):
+        api = UptimeApi.get_instance(self)                
         while not self.stop:
-            try:
-                api = UptimeApi.get_instance(self)
+            try:                
                 await api.login_and_gather_data()
                 self.display(api, deck)
             except Exception as e:
@@ -163,10 +172,16 @@ class UptimeApi():
         if not hasattr(self, '_last_login_time'):
             self._last_login_time = 0
 
-        current_time = asyncio.get_event_loop().time()
+        loop = asyncio.get_running_loop()
+        current_time = loop.time()
         if current_time - self._last_login_time >= 30:
             self._last_login_time = current_time
-            await asyncio.to_thread(self._login)            
+            # self._login()
+            # await asyncio.to_thread(self._login)            
+            await loop.run_in_executor(None, self._login)
+
+        while self.monitors is None:
+            await asyncio.sleep(2)
 
     def _login(self):
         print(f"{ datetime.now() }\texpensive call: uptime_api.login")

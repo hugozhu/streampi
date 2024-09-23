@@ -114,16 +114,21 @@ async def key_change_callback(deck, key, state):
     except Exception as e:
         logger.exception(e)
 
-async def next_page():
+async def next_page(delta=1):
     global scences, scence_index, deck_keys, my_deck, tasks
 
     cancel_tasks()
-    
+
     for index, p in enumerate(scences[scence_index]):
         asyncio.create_task(p.on_will_disappear(deck_keys[index]))
 
-    scence_index = scence_index + 1 if scence_index < len(scences) -1 else 0
-    
+    scence_index = scence_index + delta
+    if scence_index < 0:
+        scence_index =  len(scences) - 1
+
+    if scence_index >= len(scences):
+        scence_index = 0
+
     for index, p in enumerate(scences[scence_index]):
         tasks.append(asyncio.create_task(p.on_will_appear(deck_keys[index])))
 
