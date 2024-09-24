@@ -211,6 +211,9 @@ class DeviceManagerDelegate:
     def close(self):
         if self.deck:   
             # Close deck handle, terminating internal worker threads.
+            print("====shutdown streampi===-")            
+            self.deck.reset()
+            self.deck.set_brightness(0)            
             self.deck.close()
 
 config = load_json_file('./config.json')
