@@ -2,7 +2,7 @@ import os, logging, json
 import asyncio
 import time
 
-from plugins import StreamDeck, PLUGIN_CLASSES
+from plugins import StreamPi, PLUGIN_CLASSES
 
 logger = logging.getLogger("asyncio")
 
@@ -26,7 +26,7 @@ def init_from_json(json_data):
     plugin_pages = []
 
     #set up how to show text on key image
-    StreamDeck.initialize(config)
+    StreamPi.initialize(config)
 
     for plugin_config in json_data['plugins']:
         plugin_type = plugin_config.pop("type")
@@ -85,8 +85,8 @@ async def key_change_callback(deck, key, state):
         if not state:
             # keep lcd on
             margins = [0, 0, 0, 0]
-            if StreamDeck.lcd_off:
-                await dm.set_bright_level(StreamDeck.bright_level)
+            if StreamPi.lcd_off:
+                await dm.set_bright_level(StreamPi.bright_level)
             else:   
                 if last_long_press_task == None:
                     last_key_up_task = asyncio.create_task(delay_and_key_up(p, deck_keys, key))
@@ -137,7 +137,7 @@ async def start():
         dm.set_key_callback_async(key_change_callback)
          
         for index, p in enumerate(scences[scence_index]):
-            deck_keys[index] = StreamDeck (
+            deck_keys[index] = StreamPi (
                 deck = deck,
                 key = index
             )
@@ -170,13 +170,13 @@ class DeviceManagerDelegate:
 
     async def set_bright_level(self, level=0):
         if level == 0:        
-            StreamDeck.lcd_off = True
+            StreamPi.lcd_off = True
             self.deck.set_brightness(0)
         else:        
-            if StreamDeck.lcd_off or level != StreamDeck.bright_level:
-                StreamDeck.lcd_off = False
-                StreamDeck.set_bright_level(level)
-                self.deck.set_brightness(StreamDeck.bright_level)
+            if StreamPi.lcd_off or level != StreamPi.bright_level:
+                StreamPi.lcd_off = False
+                StreamPi.set_bright_level(level)
+                self.deck.set_brightness(StreamPi.bright_level)
 
     def set_key_callback_async(self, key_change_callback):
         self.deck.set_key_callback_async(key_change_callback)
@@ -205,7 +205,7 @@ class DeviceManagerDelegate:
                 self.deck.clearAllIcon()
             else:
                 self.deck.reset()
-            self.deck.set_brightness(StreamDeck.bright_level)
+            self.deck.set_brightness(StreamPi.bright_level)
 
     #关闭       
     def close(self):

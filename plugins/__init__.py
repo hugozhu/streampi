@@ -1,8 +1,9 @@
 import os
 import importlib
-from plugins.streamdeck import StreamDeck
+from plugins.streamdeck import StreamDeck as StreamPi
 
 PLUGIN_CLASSES = {}
+PLUGIN_ROUTERS = {}
 
 def convert_to_camel_case(s: str) -> str:
     parts = s.split('_')
@@ -18,8 +19,12 @@ for filename in os.listdir(os.path.dirname(__file__)):
         if plugin_class:
             print("Loading streampi plugin: ", plugin_class_name, plugin_class)
             PLUGIN_CLASSES[plugin_class_name] = plugin_class
+            
+        if hasattr(module, 'router'):
+            PLUGIN_ROUTERS[plugin_class_name] = module.router
 
 __all__ = [
-    "StreamDeck",
+    "StreamPi",
     "PLUGIN_CLASSES",
+    "PLUGIN_ROUTERS"
 ]

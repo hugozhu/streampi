@@ -1,4 +1,5 @@
-from .plugin import StreamDeckPlugin, StreamDeck
+from .plugin import StreamDeckPlugin
+from . import StreamPi
 from pydantic import Field
 from typing import Optional
 
@@ -17,16 +18,16 @@ class NextPagePlugin(StreamDeckPlugin):
         self.update_screen(deck)
 
     async def on_key_double_click(self, deck) -> None:
-        url = f'{StreamDeck.base_data_url()}/admin/lcd_off'
+        url = f'{self.base_data_url()}/admin/lcd_off'
         await self.async_fetch_data(url)
         self.title=""
         self.update_screen(deck)
     
     async def on_key_up(self, deck) -> None:
         if self.prev:
-            url = f'{StreamDeck.base_data_url()}/admin/next'
+            url = f'{self.base_data_url()}/admin/next'
         else:
-            url = f'{StreamDeck.base_data_url()}/admin/prev'
+            url = f'{self.base_data_url()}/admin/prev'
         await self.async_fetch_data(url)
         self.title=""
         self.update_screen(deck)

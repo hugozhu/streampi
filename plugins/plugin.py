@@ -71,7 +71,7 @@ class StreamDeckPlugin(BaseModel):
     stop: bool = False
         
     def base_data_url(self):
-        return f'http://127.0.0.1:{StreamDeck.data_port}'
+        return StreamDeck.base_data_url()
 
     async def async_fetch_data(self, url, headers=None, post_data=None, query_params=None, timeout=10, max_retries=2):
         return await DataFetcher.async_fetch_data(url, headers=headers, post_data=post_data, query_params=query_params, 
