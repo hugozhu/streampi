@@ -18,6 +18,11 @@ router = APIRouter(
 async def health_check():
     return "OK"
 
+@router.get("/stop")
+async def stop(url: str, monitor_id: int, key_up_count: int):
+    api = SingletonUptimeApi.get_instance_by_url(url)
+    api.logout()
+
 @router.get("/get_data")
 async def get_data(url: str, monitor_id: int, key_up_count: int):
     api = SingletonUptimeApi.get_instance_by_url(url)
@@ -129,10 +134,22 @@ class UptimePlugin(StreamDeckPlugin):
         while not self.stop:
             await self.refresh(deck)
             await asyncio.sleep(self.interval)
+        
+        await self.async_fetch_data(f"{self.base_data_url()}/uptime/stop",
+                        query_params = {
+                            "url": self.url, 
+                            "monitor_id": self.monitor_id, 
+                            "key_up_count": self.key_up_count
+                        }
+                    )
             
     async def on_will_appear(self, deck) -> None:
+        await super().on_will_appear(deck)
         self.update_screen(deck)
         await self.run(deck)
+
+    async def on_will_disappear(self, deck) -> None:
+        await super().on_will_disappear(deck)
 
     async def on_key_up(self, deck) -> None:
         self.key_up_count = self.key_up_count + 1
@@ -234,21 +251,6 @@ class SingletonUptimeApi:
         merged_df = pd.merge(all_monitors, all_heartbeats, left_on='id', right_on='id', how='left')
         return merged_df
 
-    async def login_and_gather_data(self):
-        if not hasattr(self, '_last_login_time'):
-            self._last_login_time = 0
-
-        loop = asyncio.get_running_loop()
-        current_time = loop.time()
-        if current_time - self._last_login_time >= 30:
-            self._last_login_time = current_time
-            # self._login()
-            # await asyncio.to_thread(self._login)            
-            await loop.run_in_executor(None, self._login)
-
-        while self.monitors is None:
-            await asyncio.sleep(2)
-
     def _login(self):
         print(f"{ datetime.now() }\texpensive call: uptime_api.login")
         if not self.is_logged_in:
@@ -266,6 +268,11 @@ class SingletonUptimeApi:
                 self.is_logged_in = False
                 print("Failed to collect data", e)
 
+    def _logout(self):        
+        if self.is_logged_in:
+            self.is_logged_in = False
+            self.api.logout()            
+
     def get_heartbeats(self):
         return self.api.get_heartbeats()
 
@@ -273,6 +280,4 @@ class SingletonUptimeApi:
         return self.api.get_monitor(id)
 
     def uptime(self):
-        return self.api.uptime()
-
-        
+        return self.api.uptime()        
