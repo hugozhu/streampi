@@ -4,11 +4,11 @@ from pydantic.fields import Field
 from aiocache import cached, Cache
 import asyncio 
 import httpx, logging, time
+from plugins.streamdeck import StreamDeck
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("asyncio")
 button_press_times = {}
-
 
 class DataFetcher:
     @staticmethod
@@ -61,6 +61,9 @@ class StreamDeckPlugin(BaseModel):
     data: dict = Field(default_factory=dict)
     stop: bool = False
         
+    def base_data_url(self):
+        return f'http://127.0.0.1:{StreamDeck.data_port}'
+
     async def async_fetch_data(self, url, post_data=None, query_params=None, timeout=10, max_retries=2):
         return await DataFetcher.async_fetch_data(url, post_data, query_params, timeout, max_retries)
 

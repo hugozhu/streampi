@@ -26,7 +26,7 @@ def init_from_json(json_data):
     plugin_pages = []
 
     #set up how to show text on key image
-    StreamDeck.initialize(config['text_setting'])
+    StreamDeck.initialize(config)
 
     for plugin_config in json_data['plugins']:
         plugin_type = plugin_config.pop("type")
@@ -57,7 +57,7 @@ async def delay_and_long_press(p, deck_keys, key):
     await p.on_key_long_pressed(deck_keys[key])
 
 async def key_change_callback(deck, key, state):    
-    # global scences, scence_index, deck_keys, key_press_times, last_key_up_task, last_long_press_task
+    global scences, scence_index, deck_keys, key_press_times, last_key_up_task, last_long_press_task
     print("Deck {} Key {} = {}".format(deck.id(), key, state), flush=True)
     try:
         p = scences[scence_index][key]

@@ -30,10 +30,12 @@ class StreamDeck(BaseModel):
     deck: Any = Field(default=None)
     key: int
     key_image: Any = Field(default=None)
+    data_port: int = 8000
 
     @classmethod
     def initialize(cls, config):
-        TextSetting.initialize_fonts(config)    
+        StreamDeck.data_port = config.get('server_port', 8000)
+        TextSetting.initialize_fonts(config['text_setting'])    
 
     @staticmethod
     def set_bright_level(level=0):

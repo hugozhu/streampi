@@ -6,8 +6,9 @@ from contextlib import asynccontextmanager
 import asyncio
 import traceback
 import uvicorn
-from cli import start as stream_deck_start, dm, next_page
 from contextlib import asynccontextmanager
+from routers.utils import load_routes
+from routers import streamdeck
 
 logger = logging.getLogger("streamdeck")
 
@@ -30,29 +31,13 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
-@app.get("/ok")
-async def health_check():
-    return "OK"
+from cli import start as stream_deck_start, dm, next_page
+streamdeck.dm = dm
+streamdeck.next_page = next_page
+app.include_router(streamdeck.router)
 
-@app.get("/admin/lcd_on")
-async def lcd_on():
-    await dm.screen_on()
-
-@app.get("/admin/lcd_off")
-async def lcd_off():
-    await dm.screen_off()
-
-@app.get("/admin/down")
-async def down():
-    dm.close()
-
-@app.get("/admin/prev")
-async def prev():
-    await next_page(-1)
-
-@app.get("/admin/next")
-async def next():
-    await next_page(1)
+from plugins.uptime_plugin import router
+app.include_router(router)
 
 def main():
     import argparse

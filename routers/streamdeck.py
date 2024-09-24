@@ -5,7 +5,8 @@ import logging
 
 logger = logging.getLogger("admin-api")
 
-global dm, next_page
+dm = None
+next_page = None
 
 router = APIRouter(
     prefix="/admin",
@@ -17,22 +18,22 @@ router = APIRouter(
 async def health_check():
     return "OK"
 
-@router.get("/admin/lcd_on")
+@router.get("/lcd_on")
 async def lcd_on():
     await dm.screen_on()
 
-@router.get("/admin/lcd_off")
+@router.get("/lcd_off")
 async def lcd_off():
     await dm.screen_off()
 
-@router.get("/admin/down")
+@router.get("/down")
 async def down():
     dm.close()
 
-@router.get("/admin/prev")
+@router.get("/prev")
 async def prev():
     await next_page(-1)
 
-@router.get("/admin/next")
+@router.get("/next")
 async def next():
     await next_page(1)
