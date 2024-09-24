@@ -33,6 +33,10 @@ class StreamDeck(BaseModel):
     data_port: int = 8000
 
     @classmethod
+    def base_data_url(cls):
+        return f'http://127.0.0.1:{StreamDeck.data_port}'
+
+    @classmethod
     def initialize(cls, config):
         StreamDeck.data_port = config.get('server_port', 8000)
         TextSetting.initialize_fonts(config['text_setting'])    

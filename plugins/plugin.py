@@ -13,33 +13,42 @@ button_press_times = {}
 class DataFetcher:
     @staticmethod
     @cached(cache=Cache.MEMORY, ttl=60, namespace="main")
-    async def async_fetch_data(url, post_data=None, query_params=None, timeout=10, max_retries=2):
+    async def async_fetch_data(url, 
+                               post_data=None,                                
+                               query_params=None,   
+                               headers=None,                               
+                               timeout=10,
+                               max_retries=2):
         retries = 0
+        # print(url, "timeout .....", timeout)
         while retries < max_retries:
             try:
-                async with httpx.AsyncClient() as client:
-                    if post_data:
-                        response = await client.post(url, json=post_data, timeout=timeout)
-                    else:
-                        response = await client.get(url, params=query_params, timeout=timeout)
-                
+                async with httpx.AsyncClient(headers=headers) as client:                    
+                    method = 'POST' if post_data else 'GET'
+                    response = await client.request(method,
+                                                    url,
+                                                    json=post_data,
+                                                    params=query_params, 
+                                                    timeout=timeout)
+                    
                 response.raise_for_status()  # Raise an error for bad status codes
                 return response.json()
             except Exception as e:
-                retries += 1
-                logger.error(f"{url} Timeout occurred. Retrying ({retries}/{max_retries})...")        
+                print(query_params)
+                retries += 1                
+                logger.error(f"{url} {e}. Retrying ({retries}/{max_retries})...")
+                
         return {}
-
     
     #   urls_with_data = [
     #     {"url": url, "post_data": {"query": stat_ads_spending()}},
     #     {"url": url, "post_data": {"query": stat_new_user()}},
     # ]   
     @staticmethod
-    async def fetch_urls(urls_with_data, timeout=10, max_retries=2):
+    async def fetch_urls(urls_with_data, timeout=10, max_retries=2, headers=None):
         try:
             tasks = [
-                DataFetcher.async_fetch_data(url_data['url'], post_data=url_data.get('post_data'), query_params=url_data.get('query_params'), timeout=timeout, max_retries=max_retries)
+                DataFetcher.async_fetch_data(url_data['url'], headers=headers, post_data=url_data.get('post_data'), query_params=url_data.get('query_params'), timeout=timeout, max_retries=max_retries)
                 for url_data in urls_with_data
             ]
             return await asyncio.gather(*tasks, return_exceptions=True)
@@ -64,11 +73,13 @@ class StreamDeckPlugin(BaseModel):
     def base_data_url(self):
         return f'http://127.0.0.1:{StreamDeck.data_port}'
 
-    async def async_fetch_data(self, url, post_data=None, query_params=None, timeout=10, max_retries=2):
-        return await DataFetcher.async_fetch_data(url, post_data, query_params, timeout, max_retries)
+    async def async_fetch_data(self, url, headers=None, post_data=None, query_params=None, timeout=10, max_retries=2):
+        return await DataFetcher.async_fetch_data(url, headers=headers, post_data=post_data, query_params=query_params, 
+                                                  timeout=timeout, max_retries=max_retries)
 
-    async def fetch_urls(self, urls_with_data, timeout=10, max_retries=2):
-        return await DataFetcher.fetch_urls(urls_with_data, timeout, max_retries)
+    async def fetch_urls(self, urls_with_data, headers=None, timeout=10, max_retries=2):
+        return await DataFetcher.fetch_urls(urls_with_data, headers=headers, timeout=timeout, max_retries=max_retries)
+    
     
     def info(self, msg, *args, **kwargs):
         logger.info(msg, *args, **kwargs)

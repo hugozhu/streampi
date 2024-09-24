@@ -36,8 +36,12 @@ streamdeck.dm = dm
 streamdeck.next_page = next_page
 app.include_router(streamdeck.router)
 
-from plugins.uptime_plugin import router
-app.include_router(router)
+from plugins.uptime_plugin import router as router1
+from plugins.clickhouse_plugin import router as router2
+from plugins.apisix_plugin import router as router3
+app.include_router(router1)
+app.include_router(router2)
+app.include_router(router3)
 
 def main():
     import argparse

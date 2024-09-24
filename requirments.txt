@@ -7,3 +7,6 @@ aliyun_log_python_sdk
 streamdeck
 streamdock
 uptime_kuma_api
+
+dingtalk-stream
+DingtalkChatbot

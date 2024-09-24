@@ -104,7 +104,7 @@ async def key_change_callback(deck, key, state):
         logger.exception(e)
 
 async def next_page(delta=1):
-    # global scences, scence_index, deck_keys, tasks
+    global scences, scence_index, deck_keys, tasks
     cancel_tasks()
 
     for index, p in enumerate(scences[scence_index]):
@@ -121,7 +121,7 @@ async def next_page(delta=1):
         tasks.append(asyncio.create_task(p.on_will_appear(deck_keys[index])))
 
 def cancel_tasks():
-    # global tasks
+    global tasks
     for task in tasks:
         task.cancel()
     tasks = []

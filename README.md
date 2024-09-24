@@ -52,9 +52,9 @@ fastapi --version
 ```
 
 ## 重置USB设备
-
+按键失灵的时候，可以用以下命令
 ```bash
-sudo usbreset 001/015
+sudo usbreset <bus-id:001/device-number:015>
 ```
 
 ## 启动程序
