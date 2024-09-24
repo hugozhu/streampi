@@ -253,6 +253,7 @@ class SingletonUptimeApi:
 
     def _login(self):
         print(f"{ datetime.now() }\texpensive call: uptime_api.login")
+        
         if not self.is_logged_in:
             try:
                 token = self.api.login(self.username, self.password)

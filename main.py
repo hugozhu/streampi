@@ -12,7 +12,7 @@ from cli import start as stream_deck_start, dm, next_page
 from routers import streamdeck
 from plugins import PLUGIN_ROUTERS
 
-logger = logging.getLogger("streamdeck")
+logger = logging.getLogger("streampi")
 
 def handle_exception(loop, context):
     # Extract the exception from the context
@@ -40,7 +40,7 @@ app.include_router(streamdeck.router)
 
 # registering 3rd party plugin routers
 for plugin_class, plugin_router in PLUGIN_ROUTERS.items():
-    logger.info("registering plugin router from class:", plugin_class)
+    logger.info(f"registering plugin router from class: {plugin_class}")
     app.include_router(plugin_router)
     
 def main():
