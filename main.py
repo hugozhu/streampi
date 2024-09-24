@@ -3,11 +3,10 @@
 import os, logging
 from fastapi import FastAPI, Body, Query
 from contextlib import asynccontextmanager
-from routers import streamdeck
 import asyncio
 import traceback
 import uvicorn
-from cli import start as stream_deck_start, stop as stream_deck_stop, next_page, screen_on, screen_off
+from cli import start as stream_deck_start, dm, next_page
 from contextlib import asynccontextmanager
 
 logger = logging.getLogger("streamdeck")
@@ -27,33 +26,25 @@ async def lifespan(app: FastAPI):
     loop.set_exception_handler(handle_exception)    
     asyncio.create_task(stream_deck_start())
     yield    
-    stream_deck_stop()
+    dm.close()
 
 app = FastAPI(lifespan=lifespan)
 
-# app.include_router(apisix_web.router)
-# app.include_router(clickhouse.router)
-app.include_router(streamdeck.router)
-
-@app.get("/health/check")
+@app.get("/ok")
 async def health_check():
     return "OK"
 
 @app.get("/admin/lcd_on")
 async def lcd_on():
-    await screen_on()
+    await dm.screen_on()
 
 @app.get("/admin/lcd_off")
 async def lcd_off():
-    await screen_off()
-
-@app.get("/admin/up")
-async def up():
-    await stream_deck_start()
+    await dm.screen_off()
 
 @app.get("/admin/down")
 async def down():
-    stream_deck_stop()
+    dm.close()
 
 @app.get("/admin/prev")
 async def prev():

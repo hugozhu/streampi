@@ -1,10 +1,10 @@
-# streampi - fast response system monitor with low cost
+# StreamPi - 低成本快速响应系统监控工具 the Low-Cost Fast Response System Monitoring Tool.
 
 https://blog.hugozhu.site
 
 # 使用Raspberry Pi和Streamdeck监控云原生大数据系统的稳定性
 
-**关键词**：Raspberry Pi, StreamDeck, Uptime Kuma, DuckDB, Airflow, Aliyun SLS, DingTalk, Clickhouse, DataWorks, Grafana
+**关键词**：Raspberry Pi, StreamDeck, MiraBox, Uptime Kuma, DuckDB, Airflow, Aliyun SLS, DingTalk, Clickhouse, DataWorks, Grafana
 
 ## 引言
 

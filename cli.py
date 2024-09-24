@@ -6,7 +6,6 @@ from plugins import StreamDeck, PLUGIN_CLASSES
 
 logger = logging.getLogger("asyncio")
 
-my_deck = None
 scence_index = 0
 deck_keys = [0 for _ in range(32)]
 key_press_times = {}
@@ -48,16 +47,6 @@ def load_json_file(file_path):
     with open(file_path, 'r') as file:
         return json.load(file)
 
-config = load_json_file('./config.json')
-scences = init_from_json(config)
-
-if config.get("device_model") == 'streamdeck':
-    from StreamDeck.DeviceManager import DeviceManager
-    from StreamDeck.ImageHelpers import PILHelper
-else:
-    from StreamDock.DeviceManager import DeviceManager
-    from StreamDock.ImageHelpers import PILHelper
-
 async def delay_and_key_up(p, deck_keys, key):
     await asyncio.sleep(DOUBLE_KEY_INTERVAL)  # Wait for 0.3 seconds
     await p.on_key_up(deck_keys[key])
@@ -68,9 +57,9 @@ async def delay_and_long_press(p, deck_keys, key):
     await p.on_key_long_pressed(deck_keys[key])
 
 async def key_change_callback(deck, key, state):    
-    global scences, scence_index, deck_keys, key_press_times, last_key_up_task, last_long_press_task
+    # global scences, scence_index, deck_keys, key_press_times, last_key_up_task, last_long_press_task
     print("Deck {} Key {} = {}".format(deck.id(), key, state), flush=True)
-    try:    
+    try:
         p = scences[scence_index][key]
         current_time = time.time()
         last_press_time = key_press_times.get(key, 0)
@@ -97,7 +86,7 @@ async def key_change_callback(deck, key, state):
             # keep lcd on
             margins = [0, 0, 0, 0]
             if StreamDeck.lcd_off:
-                await set_bright_level(StreamDeck.bright_level)
+                await dm.set_bright_level(StreamDeck.bright_level)
             else:   
                 if last_long_press_task == None:
                     last_key_up_task = asyncio.create_task(delay_and_key_up(p, deck_keys, key))
@@ -115,8 +104,7 @@ async def key_change_callback(deck, key, state):
         logger.exception(e)
 
 async def next_page(delta=1):
-    global scences, scence_index, deck_keys, my_deck, tasks
-
+    # global scences, scence_index, deck_keys, tasks
     cancel_tasks()
 
     for index, p in enumerate(scences[scence_index]):
@@ -132,39 +120,21 @@ async def next_page(delta=1):
     for index, p in enumerate(scences[scence_index]):
         tasks.append(asyncio.create_task(p.on_will_appear(deck_keys[index])))
 
-async def set_bright_level(level=0):
-    global my_deck
-    if level == 0:        
-        StreamDeck.lcd_off = True
-        my_deck.set_brightness(0)
-    else:        
-        if StreamDeck.lcd_off or level != StreamDeck.bright_level:
-            StreamDeck.lcd_off = False
-            StreamDeck.set_bright_level(level)
-            my_deck.set_brightness(StreamDeck.bright_level)
-
 def cancel_tasks():
-    global tasks
+    # global tasks
     for task in tasks:
         task.cancel()
     tasks = []
 
-async def start():
-    global scences, deck_keys, my_deck, tasks
-    
+async def start():    
     streamdecks = DeviceManager().enumerate()    
     print("Found {} Stream Deck(s).\n".format(len(streamdecks)))
     for index, deck in enumerate(streamdecks):
-        my_deck = deck
+        
         print(f"Device {index+1} Class Name: {deck.__class__.__name__}, Model Type: {deck.__module__}")
-        deck.open()
-        if deck.__module__.startswith("StreamDock"):
-            deck.set_seconds(60 * 60 * 4)
-            deck.clearAllIcon()
-        else:
-            deck.reset()
-        deck.set_brightness(StreamDeck.bright_level)
-        deck.set_key_callback_async(key_change_callback)
+        dm.set_device(deck)
+        dm.open()
+        dm.set_key_callback_async(key_change_callback)
          
         for index, p in enumerate(scences[scence_index]):
             deck_keys[index] = StreamDeck (
@@ -175,30 +145,78 @@ async def start():
             tasks.append(task)
         return
 
-#唤醒屏幕
-async def screen_on():
-    global my_deck
-    if my_deck.__module__.startswith("StreamDock"):
-        my_deck.screen_On()
-    else:
-        await set_bright_level(60)
+class DeviceManagerDelegate:
+    """
+    物理设备的代理类，同时兼容StreamDeck和StreamDock
+    """
+    deck = None
+    def __init__(self, device_model):
+        self.device_model = device_model
     
+    def import_device_manager(self):
+        if self.device_model == 'streamdeck':
+            from StreamDeck.DeviceManager import DeviceManager
+            from StreamDeck.ImageHelpers import PILHelper
+        else:
+            from StreamDock.DeviceManager import DeviceManager
+            from StreamDock.ImageHelpers import PILHelper
+        return DeviceManager, PILHelper
 
-#息屏
-async def screen_off():
-    global my_deck
-    if my_deck.__module__.startswith("StreamDock"):
-        my_deck.screen_Off()
-    else:
-        await set_bright_level(0)
+    def get_dervice(self):
+        return self.deck
 
-    
+    def set_device(self, deck):
+        self.deck = deck
 
-def stop():
-    global my_deck 
-    if my_deck:   
-        # Close deck handle, terminating internal worker threads.
-        my_deck.close()
+    async def set_bright_level(self, level=0):
+        if level == 0:        
+            StreamDeck.lcd_off = True
+            self.deck.set_brightness(0)
+        else:        
+            if StreamDeck.lcd_off or level != StreamDeck.bright_level:
+                StreamDeck.lcd_off = False
+                StreamDeck.set_bright_level(level)
+                self.deck.set_brightness(StreamDeck.bright_level)
+
+    def set_key_callback_async(self, key_change_callback):
+        self.deck.set_key_callback_async(key_change_callback)
+
+    #唤醒屏幕
+    async def screen_on(self):
+        if self.deck.__module__.startswith("StreamDock"):
+            self.deck.screen_On()
+        else:
+            await self.set_bright_level(60)
+        
+    #息屏
+    async def screen_off(self):
+        if self.deck.__module__.startswith("StreamDock"):
+            self.deck.screen_Off()
+        else:
+            await self.set_bright_level(0)
+
+    #开启      
+    def open(self):
+        if self.deck:
+            # Close deck handle, terminating internal worker threads.
+            self.deck.open()
+            if self.deck.__module__.startswith("StreamDock"):
+                self.deck.set_seconds(60 * 60 * 4)
+                self.deck.clearAllIcon()
+            else:
+                self.deck.reset()
+            self.deck.set_brightness(StreamDeck.bright_level)
+
+    #关闭       
+    def close(self):
+        if self.deck:   
+            # Close deck handle, terminating internal worker threads.
+            self.deck.close()
+
+config = load_json_file('./config.json')
+scences = init_from_json(config)
+dm = DeviceManagerDelegate(config.get("device_model"))
+DeviceManager, PILHelper = dm.import_device_manager()
 
 if __name__ == "__main__":
     asyncio.run(start())
