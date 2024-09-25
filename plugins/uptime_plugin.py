@@ -164,9 +164,11 @@ class AsyncRequester:
 
     async def _fetch_periodically(self, interval):
         while True:
-            self.func()
-            self._first_call_done_event.set()
-            await asyncio.sleep(interval)
+            if self.func():
+                self._first_call_done_event.set()
+                await asyncio.sleep(interval)
+            else:
+                await asyncio.sleep(10)
 
     def cancel(self):
         if not self._task.done():
@@ -266,9 +268,12 @@ class SingletonUptimeApi:
             try:                
                 print(f"{ datetime.now() }\t==\tcollect_data at {self.api.url}")
                 self.monitors = self.collect_data().fillna(0)
+                return True
             except Exception as e:
                 self.is_logged_in = False
-                print("Failed to collect data", e)
+                print("Failed to collect data", e) 
+
+        return False
 
     def _logout(self):        
         if self.is_logged_in:
