@@ -198,7 +198,6 @@ class DeviceManagerDelegate:
     #开启      
     def open(self):
         if self.deck:
-            # Close deck handle, terminating internal worker threads.
             self.deck.open()
             if self.deck.__module__.startswith("StreamDock"):
                 self.deck.set_seconds(60 * 60 * 4)
@@ -211,9 +210,12 @@ class DeviceManagerDelegate:
     def close(self):
         if self.deck:   
             # Close deck handle, terminating internal worker threads.
-            print("====shutdown streampi===-")            
-            self.deck.reset()
-            self.deck.set_brightness(0)            
+            print("====shutdown streampi===")
+            if self.deck.__module__.startswith("StreamDock"):         
+                self.deck.clearAllIcon()
+            else:
+                self.deck.reset()
+                self.deck.set_brightness(0)            
             self.deck.close()
 
 config = load_json_file('./config.json')

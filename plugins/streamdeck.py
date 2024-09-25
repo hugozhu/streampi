@@ -110,7 +110,7 @@ def _draw_text(image, label_text, highlight_color, text_vertical_alignment="cent
                     color = highlight_color
                     y += f.size                    
                 else:
-                    f = TextSetting.tiny_font
+                    f = TextSetting.small_font
                     color = highlight_color
                     y += f.size
                 draw.text((x, y), text=line, font=f, anchor="ms", fill=color)

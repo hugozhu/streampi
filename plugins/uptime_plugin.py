@@ -24,15 +24,15 @@ async def stop(url: str, monitor_id: int, key_up_count: int):
     api.logout()
 
 @router.get("/get_data")
-async def get_data(url: str, monitor_id: int, key_up_count: int):
+async def get_data(url: str, monitor_id: int, key_up_count: int, interval: int):
     api = SingletonUptimeApi.get_instance_by_url(url)
     if not api.task:
-        api.task = AsyncRequester(api._login)
+        api.task = AsyncRequester(api._login, interval)
     
     await api.task._first_call_done_event.wait()
 
     title = "\nLoading..."
-    background = "black"                
+    background = "black"
     
     try:
         monitors_df = api.monitors           
@@ -122,7 +122,8 @@ class UptimePlugin(StreamDeckPlugin):
                         query_params = {
                             "url": self.url, 
                             "monitor_id": self.monitor_id, 
-                            "key_up_count": self.key_up_count
+                            "key_up_count": self.key_up_count,
+                            "interval": self.interval
                         }
                     )
         if data:
@@ -156,16 +157,16 @@ class UptimePlugin(StreamDeckPlugin):
         await self.refresh(deck)
 
 class AsyncRequester:
-    def __init__(self, func):
+    def __init__(self, func, interval):
         self.func = func
-        self._task = asyncio.create_task(self._fetch_periodically())
+        self._task = asyncio.create_task(self._fetch_periodically(interval))
         self._first_call_done_event = asyncio.Event()
 
-    async def _fetch_periodically(self):
+    async def _fetch_periodically(self, interval):
         while True:
             self.func()
             self._first_call_done_event.set()
-            await asyncio.sleep(30)
+            await asyncio.sleep(interval)
 
     def cancel(self):
         if not self._task.done():
@@ -251,19 +252,19 @@ class SingletonUptimeApi:
         merged_df = pd.merge(all_monitors, all_heartbeats, left_on='id', right_on='id', how='left')
         return merged_df
 
-    def _login(self):
-        print(f"{ datetime.now() }\texpensive call: uptime_api.login")
-        
+    def _login(self):        
         if not self.is_logged_in:
             try:
+                print(f"{ datetime.now() }\t==\tlogin to {self.api.url}")
                 token = self.api.login(self.username, self.password)
                 if "token" in token:
                     self.is_logged_in = True
             except Exception as e:
-                print("Failed to login and collect data", e)            
+                print(f"Failed to login {self.api.url} and collect data :", e)            
 
         if self.is_logged_in:
             try:                
+                print(f"{ datetime.now() }\t==\tcollect_data at {self.api.url}")
                 self.monitors = self.collect_data().fillna(0)
             except Exception as e:
                 self.is_logged_in = False
