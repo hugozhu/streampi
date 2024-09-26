@@ -71,7 +71,7 @@ async def get_data(url: str, monitor_id: int, key_up_count: int, interval: int):
                 if err_count>0:
                     background = "red"
                 else:
-                    background = "black"
+                    background = "green"
                 if key_up_count % 2 == 0:
                     title = f"Succ: {succ_count}\nErr: {err_count}"
                 else:
@@ -79,7 +79,8 @@ async def get_data(url: str, monitor_id: int, key_up_count: int, interval: int):
                         node = error_monitors.iloc[0]
                         msg = convert_to_multiple_lines(f"{node.id} {node.msg}")
                     else:
-                        msg = "Clean"                            
+                        msg = "All\nClean"
+                        background = "green"
                     title = f"{msg}"            
     except Exception as e:
         print(e)
