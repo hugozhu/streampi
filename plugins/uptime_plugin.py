@@ -114,9 +114,11 @@ class UptimePlugin(StreamDeckPlugin):
     password: str = Field(default="")
     key_up_count: int = 0
 
+    
+
     def __init__(self, **data):
         super().__init__(**data)
-        SingletonUptimeApi.get_instance(self)
+        SingletonUptimeApi(self)
 
     async def refresh(self, deck):
         data = await self.async_fetch_data(f"{self.base_data_url()}/uptime/get_data",
@@ -192,29 +194,26 @@ class SingletonUptimeApi:
 
     task = None
 
-    @staticmethod
-    def get_instance(plugin: UptimePlugin):
-        if plugin.url not in SingletonUptimeApi._instances:
-            SingletonUptimeApi._instances[plugin.url] = SingletonUptimeApi(plugin.url, 
-                                    plugin.username, 
-                                    plugin.password, 
-                                    plugin.monitor_id)
-        return SingletonUptimeApi._instances[plugin.url]
+    def __new__(cls, plugin: UptimePlugin):
+        key = plugin.url
+        if key not in cls._instances:
+            cls._instances[key] = super().__new__(cls)
+        return cls._instances[key]    
 
-    @staticmethod
-    def get_instance_by_url(url: str):
-        return SingletonUptimeApi._instances[url]
-
-    def __init__(self, url: str, username: str, password: str, monitor_id: int, **data):
-        super().__init__(**data)
-        self.api = UptimeKumaApi(url)
-        self.username = username
-        self.password = password
-        self.monitor_id = monitor_id        
+    def __init__(self, plugin, **kwargs):
+        super().__init__(**kwargs)
+        self.api = UptimeKumaApi(plugin.url)
+        self.username = plugin.username
+        self.password = plugin.password
+        self.monitor_id = plugin.monitor_id        
 
     def __del__(self):
         if self.task:
             del self.task
+
+    @staticmethod
+    def get_instance_by_url(url: str):
+        return SingletonUptimeApi._instances[url]
 
     def collect_data(self):
         monitors = self.api.get_monitors()        
