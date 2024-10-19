@@ -4,6 +4,18 @@ from typing import Any, ClassVar
 from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
 import cairosvg
+from dingtalkchatbot.chatbot import DingtalkChatbot
+
+class DingTalk:
+    @classmethod
+    def initialize(cls, config):
+        token = config.get('token','')
+        url = f"https://oapi.dingtalk.com/robot/send?access_token="+token
+        cls.dingtalk = DingtalkChatbot(url)
+
+    @staticmethod
+    def send_markdown(title, text):
+        DingTalk.dingtalk.send_markdown(title=title, text=text, is_at_all=True)
 
 class TextSetting:
     _initialized = False
@@ -39,6 +51,7 @@ class StreamDeck(BaseModel):
     @classmethod
     def initialize(cls, config):
         StreamDeck.data_port = config.get('server_port', 8000)
+        DingTalk.initialize(config['dingtalk'])
         TextSetting.initialize_fonts(config['text_setting'])    
 
     @staticmethod

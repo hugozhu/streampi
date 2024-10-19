@@ -3,12 +3,54 @@ from pydantic import BaseModel, ValidationError
 from pydantic.fields import Field
 from aiocache import cached, Cache
 import asyncio 
-import httpx, logging, time
+import httpx, logging
 from plugins.streamdeck import StreamDeck
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("asyncio")
 button_press_times = {}
+
+class TemplateRender:
+    def render(template_path : str, context: dict):
+        '''
+        使用Jinja2模版生成钉钉消息，默认把消息第一行为标题，也可以通过模版变量提取:
+
+        The `template` parameter is a string that represents the path to a Jinja2 template file. This template defines the structure and format of the message that will be sent to DingTalk. It can include placeholders for dynamic content that will be filled in based on the `input` data.
+
+        The `input` parameter is a dictionary containing the data that will be rendered into the template. This data can include various fields such as summary statistics and details about new goods, which will replace the placeholders in the template when generating the final message.
+
+        The function reads the template file, renders it with the provided input data, and returns a dictionary containing the title and the rendered text of the message.
+        """
+        '''
+        import os
+        from jinja2 import Environment, FileSystemLoader
+
+        # Define a dictionary to capture the variables
+        captured_vars = {}
+
+        # Define a custom filter to capture variable values
+        def capture(value, key):
+            captured_vars[key] = value
+            return value
+        
+        # 确保模板目录存在
+        template_dir = os.path.dirname(template_path)
+        env = Environment(loader=FileSystemLoader(template_dir))
+        env.filters['capture'] = capture
+        
+        # 加载模板
+        template_name = os.path.basename(template_path)
+        template = env.get_template(template_name)
+        
+        # 渲染模板
+        text = template.render(context)
+   
+        title_value = captured_vars.get('title', 'DingTalk Notification')
+        
+        return {
+            'title': title_value,
+            'text': text
+        }    
 
 class DataFetcher:
     @staticmethod
