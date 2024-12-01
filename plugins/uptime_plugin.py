@@ -171,7 +171,7 @@ class AsyncRequester:
                 self._first_call_done_event.set()
                 await asyncio.sleep(interval)
             else:
-                await asyncio.sleep(10)
+                await asyncio.sleep(100)
 
     def cancel(self):
         if not self._task.done():
@@ -218,7 +218,7 @@ class SingletonUptimeApi:
     def collect_data(self):
         monitors = self.api.get_monitors()        
         uptimes =  self.api.uptime()
-        heartbests = self.api.get_heartbeats()
+        heartbeats = self.api.get_heartbeats()
 
         df_monitors = pd.DataFrame(monitors).set_index('id')
         data = []
@@ -244,11 +244,15 @@ class SingletonUptimeApi:
 
         data = []
         
-        for id, item in heartbests.items():
-            x = item[0]  
+        for id, item in heartbeats.items():
+            if not item:
+                continue
+            
+            x = item[0]
             x['id'] = id
             data.append(x)
-        df = pd.DataFrame(data)   
+
+        df = pd.DataFrame(data)
         all_heartbeats = df
 
         merged_df = pd.merge(all_monitors, all_heartbeats, left_on='id', right_on='id', how='left')
