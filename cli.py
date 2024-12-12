@@ -224,4 +224,6 @@ dm = DeviceManagerDelegate(config.get("device_model"))
 DeviceManager, PILHelper = dm.import_device_manager()
 
 if __name__ == "__main__":
+    import uvloop
+    uvloop.install()
     asyncio.run(start())
