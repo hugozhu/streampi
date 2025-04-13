@@ -1,0 +1,18 @@
+[project]
+name = "streampi"
+version = "0.1.0"
+description = "https://github.com/hugozhu/streampi"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "aiocache>=0.12.3",
+    "aliyun-log-python-sdk>=0.9.16",
+    "cairosvg>=2.7.1",
+    "dingtalk-stream>=0.22.1",
+    "duckdb-engine>=0.17.0",
+    "fastapi[standard]>=0.115.12",
+    "pandas>=2.2.3",
+    "streamdock>=0.1.2",
+    "uptime-kuma-api>=1.2.1",
+    "uvloop>=0.21.0",
+]
