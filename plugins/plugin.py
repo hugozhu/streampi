@@ -60,12 +60,13 @@ class DataFetcher:
                                query_params=None,   
                                headers=None,                               
                                timeout=10,
-                               max_retries=2):
+                               max_retries=2,
+                               proxy=None):
         retries = 0
         # print(url, "timeout .....", timeout)
         while retries < max_retries:
             try:
-                async with httpx.AsyncClient(headers=headers) as client:                    
+                async with httpx.AsyncClient(headers=headers, proxy=proxy) as client:
                     method = 'POST' if post_data else 'GET'
                     response = await client.request(method,
                                                     url,
@@ -115,9 +116,25 @@ class StreamDeckPlugin(BaseModel):
     def base_data_url(self):
         return StreamDeck.base_data_url()
 
-    async def async_fetch_data(self, url, headers=None, post_data=None, query_params=None, timeout=10, max_retries=2):
-        return await DataFetcher.async_fetch_data(url, headers=headers, post_data=post_data, query_params=query_params, 
-                                                  timeout=timeout, max_retries=max_retries)
+    async def async_fetch_data(
+        self, 
+        url, 
+        headers=None, 
+        post_data=None, 
+        query_params=None, 
+        timeout=10, 
+        max_retries=2,
+        proxy=None
+    ):
+        return await DataFetcher.async_fetch_data(
+            url,
+            headers=headers,
+            post_data=post_data,
+            query_params=query_params,
+            timeout=timeout,
+            max_retries=max_retries,
+            proxy=proxy
+        )
 
     async def fetch_urls(self, urls_with_data, headers=None, timeout=10, max_retries=2):
         return await DataFetcher.fetch_urls(urls_with_data, headers=headers, timeout=timeout, max_retries=max_retries)

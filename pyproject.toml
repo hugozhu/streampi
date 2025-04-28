@@ -1,6 +1,6 @@
 [project]
 name = "streampi"
-version = "0.1.0"
+version = "0.1.1"
 description = "https://github.com/hugozhu/streampi"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -12,6 +12,7 @@ dependencies = [
     "dingtalkchatbot>=1.5.7",
     "duckdb-engine>=0.17.0",
     "fastapi[standard]>=0.115.12",
+    "httpx[socks]>=0.28.1",
     "pandas>=2.2.3",
     "pyudev>=0.24.3",
     "streamdock>=0.1.2",
