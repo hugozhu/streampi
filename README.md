@@ -31,6 +31,7 @@ StreamDeck 是一款可编程的硬件设备，最初设计用于流媒体控制
 
 ```bash
 sudo apt install -y libudev-dev libusb-1.0-0-dev libhidapi-libusb0
+sudo apt install libcairo2 libcairo2-dev
 pip install pyudev
 # Add udev rule to allow all users non-root access to Elgato StreamDeck devices:
 sudo tee /etc/udev/rules.d/10-streamdeck.rules << EOF
@@ -43,6 +44,7 @@ SUBSYSTEMS=="usb", ATTRS{idVendor}=="5500", GROUP="users", TAG+="uaccess",ATTR{i
 
 # Reload udev rules to ensure the new permissions take effect
 sudo udevadm control --reload-rules
+sudo udevadm trigger
 ```
 
 ```bash
@@ -50,6 +52,10 @@ conda create -n streampi
 conda install pip
 pip -r reqirements.txt --upgrade
 fastapi --version
+```
+
+```bash
+uv install
 ```
 
 ## 重置USB设备
