@@ -1,4 +1,4 @@
-# StreamPi - 低成本快速响应系统监控工具 
+# StreamPi - 低成本快速响应系统监控工具
 > the Low-Cost Fast Response System Monitoring Tool.
 
 https://blog.hugozhu.site
@@ -35,7 +35,7 @@ sudo apt install libcairo2 libcairo2-dev
 pip install pyudev
 # Add udev rule to allow all users non-root access to Elgato StreamDeck devices:
 sudo tee /etc/udev/rules.d/10-streamdeck.rules << EOF
-    SUBSYSTEMS=="usb", ATTRS{idVendor}=="0fd9", GROUP="users", TAG+="uaccess"
+    SUBSYSTEMS=="usb", ATTRS{idVendor}=="0fd9", GROUP="users", TAG+="uaccess",ATTR{idProduct}=="0063", MODE="0666"
     EOF
 
 # Add udev rule to allow all users non-root access to Elgato StreamDeck devices:
