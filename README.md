@@ -1,5 +1,5 @@
 # StreamPi - 低成本快速响应系统监控工具
-> The Low-Cost Fast Response System Monitoring Tool
+the Low-Cost Fast Response System Monitoring Tool.
 
 ![Python Version](https://img.shields.io/badge/python-3.12+-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
@@ -93,8 +93,7 @@ pip install pyudev
 ```bash
 # Elgato StreamDeck 设备
 sudo tee /etc/udev/rules.d/10-streamdeck.rules << EOF
-SUBSYSTEMS=="usb", ATTRS{idVendor}=="0fd9", GROUP="users", TAG+="uaccess"
-EOF
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="0fd9", GROUP="users", TAG+="uaccess", ATTR{idProduct}=="0063", MODE="0666"
 
 # 妙控宝 StreamDock 设备
 sudo tee /etc/udev/rules.d/20-streamdock.rules << EOF

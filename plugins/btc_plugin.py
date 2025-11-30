@@ -8,8 +8,7 @@ class BtcPlugin(StreamDeckPlugin):
 
     async def fetch_btc_data(self):
         url = 'https://api.blockchain.com/v3/exchange/tickers/BTC-USDT'
-        return await self.async_fetch_data(url, proxy="socks5://localhost:11081",
-            headers={"Accept": "application/json", "X-API-Token":"145ba96e-240b-4074-9bef-fd70ba33d818"})
+        return await self.async_fetch_data(url)
 
     async def update_deck(self, deck):
         self.update_screen(deck)
