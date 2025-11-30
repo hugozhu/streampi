@@ -2,13 +2,14 @@ from .plugin import StreamDeckPlugin
 import asyncio
 
 class BtcPlugin(StreamDeckPlugin):
-    key_up_count: int = 0    
+    key_up_count: int = 0
     def __init__(self, **data):
         super().__init__(**data)
-    
+
     async def fetch_btc_data(self):
-        url = 'https://api.blockchain.com/v3/exchange/tickers/BTC-USD'
-        return await self.async_fetch_data(url)
+        url = 'https://api.blockchain.com/v3/exchange/tickers/BTC-USDT'
+        return await self.async_fetch_data(url, proxy="socks5://localhost:11081",
+            headers={"Accept": "application/json", "X-API-Token":"145ba96e-240b-4074-9bef-fd70ba33d818"})
 
     async def update_deck(self, deck):
         self.update_screen(deck)
@@ -25,7 +26,7 @@ class BtcPlugin(StreamDeckPlugin):
         while not self.stop:
             await self.update_deck(deck)
             await asyncio.sleep(self.interval)
-            
+
     async def on_will_appear(self, deck) -> None:
         self.update_screen(deck)
         await self.run(deck)
@@ -35,4 +36,4 @@ class BtcPlugin(StreamDeckPlugin):
 
     async def on_key_up(self, deck) -> None:
         self.key_up_count = self.key_up_count + 1
-        await self.update_deck(deck) 
+        await self.update_deck(deck)
