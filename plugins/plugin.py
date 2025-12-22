@@ -1,17 +1,20 @@
-from typing import List, Optional, Any, ClassVar
+import asyncio
+import logging
+from typing import Any, ClassVar, List, Optional
+
+import httpx
+from aiocache import Cache, cached
 from pydantic import BaseModel, ValidationError
 from pydantic.fields import Field
-from aiocache import cached, Cache
-import asyncio 
-import httpx, logging
+
 from plugins.streamdeck import StreamDeck
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("asyncio")
-button_press_times = {}
+
 
 class TemplateRender:
-    def render(template_path : str, context: dict):
+    def render(template_path: str, context: dict):
         '''
         使用Jinja2模版生成钉钉消息，默认把消息第一行为标题，也可以通过模版变量提取:
 
@@ -23,6 +26,7 @@ class TemplateRender:
         """
         '''
         import os
+
         from jinja2 import Environment, FileSystemLoader
 
         # Define a dictionary to capture the variables
@@ -32,99 +36,113 @@ class TemplateRender:
         def capture(value, key):
             captured_vars[key] = value
             return value
-        
+
         # 确保模板目录存在
         template_dir = os.path.dirname(template_path)
         env = Environment(loader=FileSystemLoader(template_dir))
-        env.filters['capture'] = capture
-        
+        env.filters["capture"] = capture
+
         # 加载模板
         template_name = os.path.basename(template_path)
         template = env.get_template(template_name)
-        
+
         # 渲染模板
         text = template.render(context)
-   
-        title_value = captured_vars.get('title', 'DingTalk Notification')
-        
-        return {
-            'title': title_value,
-            'text': text
-        }    
+
+        title_value = captured_vars.get("title", "DingTalk Notification")
+
+        return {"title": title_value, "text": text}
+
 
 class DataFetcher:
     @staticmethod
     @cached(cache=Cache.MEMORY, ttl=60, namespace="main")
-    async def async_fetch_data(url, 
-                               post_data=None,                                
-                               query_params=None,   
-                               headers=None,                               
-                               timeout=10,
-                               max_retries=2,
-                               proxy=None):
+    async def async_fetch_data(
+        url,
+        post_data=None,
+        query_params=None,
+        headers=None,
+        timeout=10,
+        max_retries=2,
+        proxy=None,
+        auth=None,
+    ):
         retries = 0
         # print(url, "timeout .....", timeout)
         while retries < max_retries:
             try:
-                async with httpx.AsyncClient(headers=headers, proxy=proxy) as client:
-                    method = 'POST' if post_data else 'GET'
-                    response = await client.request(method,
-                                                    url,
-                                                    json=post_data,
-                                                    params=query_params, 
-                                                    timeout=timeout)
-                    
+                async with httpx.AsyncClient(
+                    headers=headers, auth=auth, proxy=proxy
+                ) as client:
+                    method = "POST" if post_data else "GET"
+                    response = await client.request(
+                        method,
+                        url,
+                        json=post_data,
+                        params=query_params,
+                        timeout=timeout,
+                    )
+
                 response.raise_for_status()  # Raise an error for bad status codes
                 return response.json()
             except Exception as e:
                 print(query_params)
-                retries += 1                
+                retries += 1
                 logger.error(f"{url} {e}. Retrying ({retries}/{max_retries})...")
-                
+
         return {}
-    
+
     #   urls_with_data = [
     #     {"url": url, "post_data": {"query": stat_ads_spending()}},
     #     {"url": url, "post_data": {"query": stat_new_user()}},
-    # ]   
+    # ]
     @staticmethod
     async def fetch_urls(urls_with_data, timeout=10, max_retries=2, headers=None):
         try:
             tasks = [
-                DataFetcher.async_fetch_data(url_data['url'], headers=headers, post_data=url_data.get('post_data'), query_params=url_data.get('query_params'), timeout=timeout, max_retries=max_retries)
+                DataFetcher.async_fetch_data(
+                    url_data["url"],
+                    headers=headers,
+                    post_data=url_data.get("post_data"),
+                    query_params=url_data.get("query_params"),
+                    timeout=timeout,
+                    max_retries=max_retries,
+                )
                 for url_data in urls_with_data
             ]
             return await asyncio.gather(*tasks, return_exceptions=True)
         except Exception as e:
-            print('fetch_urls', e)
+            print("fetch_urls", e)
         return [None] * len(urls_with_data)
+
 
 class StreamDeckPlugin(BaseModel):
     name: Optional[str] = None
     title: Optional[str] = None
-    interval: int = 3000 # Default interval set to 3000 seconds    
+    interval: int = 3000  # Default interval set to 3000 seconds
     image: Any = Field(default=None)
     background: str = "black"
     highlight_color: str = "yellow"
     text_vertical_alignment: str = "center"
-    
+
     margins: List[int] = Field(default_factory=lambda: [0, 0, 0, 0])
-    
+
     data: dict = Field(default_factory=dict)
     stop: bool = False
-        
+
     def base_data_url(self):
         return StreamDeck.base_data_url()
 
     async def async_fetch_data(
-        self, 
-        url, 
-        headers=None, 
-        post_data=None, 
-        query_params=None, 
-        timeout=10, 
+        self,
+        url,
+        headers=None,
+        post_data=None,
+        query_params=None,
+        timeout=10,
         max_retries=2,
-        proxy=None
+        proxy=None,
+        auth=None,
     ):
         return await DataFetcher.async_fetch_data(
             url,
@@ -133,13 +151,15 @@ class StreamDeckPlugin(BaseModel):
             query_params=query_params,
             timeout=timeout,
             max_retries=max_retries,
-            proxy=proxy
+            proxy=proxy,
+            auth=auth,
         )
 
     async def fetch_urls(self, urls_with_data, headers=None, timeout=10, max_retries=2):
-        return await DataFetcher.fetch_urls(urls_with_data, headers=headers, timeout=timeout, max_retries=max_retries)
-    
-    
+        return await DataFetcher.fetch_urls(
+            urls_with_data, headers=headers, timeout=timeout, max_retries=max_retries
+        )
+
     def info(self, msg, *args, **kwargs):
         logger.info(msg, *args, **kwargs)
 
@@ -147,22 +167,24 @@ class StreamDeckPlugin(BaseModel):
         logger.error(msg, *args, **kwargs)
 
     def update_screen(self, deck):
-        if not self.stop:            
-            deck.update_screen(self.title, 
-                self.image, 
-                self.margins, 
-                self.background, 
+        if not self.stop:
+            deck.update_screen(
+                self.title,
+                self.image,
+                self.margins,
+                self.background,
                 self.highlight_color,
-                self.text_vertical_alignment)
-    
+                self.text_vertical_alignment,
+            )
+
     # event when the plugin start display on key
     async def on_will_appear(self, deck) -> None:
-        self.stop = False  # Ensure the event is cleared when appearing  
+        self.stop = False  # Ensure the event is cleared when appearing
         pass
 
     # event when the plugin stop display on key
     async def on_will_disappear(self, deck) -> None:
-        self.stop = True  # Signal the event to stop the loop        
+        self.stop = True  # Signal the event to stop the loop
         pass
 
     async def on_key_double_click(self, deck) -> None:
@@ -170,7 +192,7 @@ class StreamDeckPlugin(BaseModel):
 
     async def on_key_long_pressed(self, deck) -> None:
         pass
-    
+
     async def on_key_down(self, deck) -> None:
         pass
 
