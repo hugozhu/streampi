@@ -1,18 +1,13 @@
 from serpapi import GoogleSearch
 
 from .plugin import StreamDeckPlugin
+from .streamdeck import StreamDeck
 
 
 class SerpAPIPlugin(StreamDeckPlugin):
-    api_key: str = ""
-
-    def __init__(self, api_key: str = "", **data):
-        super().__init__(**data)
-        self.api_key = api_key
-
     @staticmethod
     def search(
-        query: str, api_key: str, engine: str = "google_ai_mode", cc: str = "US"
+        query: str, engine: str = "google_ai_mode", cc: str = "US"
     ) -> list[dict]:
         """Fetch organic search results from SerpAPI.
 
@@ -29,7 +24,7 @@ class SerpAPIPlugin(StreamDeckPlugin):
             "engine": engine,
             "q": query,
             "cc": cc,
-            "api_key": api_key,
+            "api_key": StreamDeck.config.get("serpapi", "").get("api_key"),
         }
         search = GoogleSearch(params)
         results = search.get_dict()

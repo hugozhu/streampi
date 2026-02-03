@@ -1,8 +1,10 @@
-import os, logging, json
 import asyncio
+import json
+import logging
+import os
 import time
 
-from plugins import StreamPi, PLUGIN_CLASSES
+from plugins import PLUGIN_CLASSES, StreamPi
 
 logger = logging.getLogger("asyncio")
 
@@ -12,8 +14,9 @@ key_press_times = {}
 tasks = []
 last_key_up_task = None
 last_long_press_task = None
-DOUBLE_KEY_INTERVAL = 0.3 #seconds
-LONG_PRESS_INTERVAL = 1 #seconds
+DOUBLE_KEY_INTERVAL = 0.3  # seconds
+LONG_PRESS_INTERVAL = 1  # seconds
+
 
 def create_plugin(plugin_type, **kwargs):
     plugin_class = PLUGIN_CLASSES.get(plugin_type)
@@ -21,21 +24,22 @@ def create_plugin(plugin_type, **kwargs):
         raise ValueError(f"Unknown plugin type: {plugin_type}")
     return plugin_class(**kwargs)
 
+
 def init_from_json(json_data):
-    plugin_global_config = {} #plugin type str -> dict
+    plugin_global_config = {}  # plugin type str -> dict
     plugin_pages = []
 
-    #set up how to show text on key image
-    StreamPi.initialize(config)
+    # set up how to show text on key image
+    StreamPi.initialize(json_data)
 
-    for plugin_config in json_data['plugins']:
+    for plugin_config in json_data["plugins"]:
         plugin_type = plugin_config.pop("type")
         plugin_global_config[plugin_type] = plugin_config
 
-    for page in json_data['scenes']:
+    for page in json_data["scenes"]:
         plugins = []
         for plugin_config in page:
-            plugin_type = plugin_config.get("type") or "DummyPlugin"                
+            plugin_type = plugin_config.get("type") or "DummyPlugin"
             if plugin_type in plugin_global_config:
                 plugin_config.update(plugin_global_config[plugin_type])
             plugin = create_plugin(plugin_type, **plugin_config)
@@ -43,53 +47,67 @@ def init_from_json(json_data):
         plugin_pages.append(plugins)
     return plugin_pages
 
+
 def load_json_file(file_path):
-    with open(file_path, 'r') as file:
+    with open(file_path, "r") as file:
         return json.load(file)
+
 
 async def delay_and_key_up(p, deck_keys, key):
     await asyncio.sleep(DOUBLE_KEY_INTERVAL)  # Wait for 0.3 seconds
     await p.on_key_up(deck_keys[key])
+
 
 async def delay_and_long_press(p, deck_keys, key):
     await asyncio.sleep(LONG_PRESS_INTERVAL)  # Wait for 3 seconds
     print("long press task executed", flush=True)
     await p.on_key_long_pressed(deck_keys[key])
 
-async def key_change_callback(deck, key, state):    
-    global scences, scence_index, deck_keys, key_press_times, last_key_up_task, last_long_press_task
+
+async def key_change_callback(deck, key, state):
+    global \
+        scences, \
+        scence_index, \
+        deck_keys, \
+        key_press_times, \
+        last_key_up_task, \
+        last_long_press_task
     print("Deck {} Key {} = {}".format(deck.id(), key, state), flush=True)
     try:
         p = scences[scence_index][key]
         current_time = time.time()
         last_press_time = key_press_times.get(key, 0)
-        
-        if not state: #key up
+
+        if not state:  # key up
             key_press_times[key] = current_time
-        
-        if not state: #when key up quickly , cancel last long press task
+
+        if not state:  # when key up quickly , cancel last long press task
             if last_long_press_task and not last_long_press_task.done():
-                print(last_long_press_task, ' long press task cancelled', flush=True)
+                print(last_long_press_task, " long press task cancelled", flush=True)
                 last_long_press_task.cancel()
                 last_long_press_task = None
         else:
-            last_long_press_task = asyncio.create_task(delay_and_long_press(p, deck_keys, key))
+            last_long_press_task = asyncio.create_task(
+                delay_and_long_press(p, deck_keys, key)
+            )
             print("long press task created", flush=True)
-        
-        if current_time - last_press_time < DOUBLE_KEY_INTERVAL and not state: 
+
+        if current_time - last_press_time < DOUBLE_KEY_INTERVAL and not state:
             if last_key_up_task and not last_key_up_task.done():
-                print(last_key_up_task, ' key up task cancelled')
-                last_key_up_task.cancel() 
+                print(last_key_up_task, " key up task cancelled")
+                last_key_up_task.cancel()
             asyncio.create_task(p.on_key_double_click(deck_keys[key]))
-        
+
         if not state:
             # keep lcd on
             margins = [0, 0, 0, 0]
             if StreamPi.lcd_off:
                 await dm.set_bright_level(StreamPi.bright_level)
-            else:   
+            else:
                 if last_long_press_task == None:
-                    last_key_up_task = asyncio.create_task(delay_and_key_up(p, deck_keys, key))
+                    last_key_up_task = asyncio.create_task(
+                        delay_and_key_up(p, deck_keys, key)
+                    )
 
         else:
             margins = [10, 10, 10, 10]
@@ -99,9 +117,10 @@ async def key_change_callback(deck, key, state):
         if image:
             image = PILHelper.create_scaled_key_image(deck, image, margins=margins)
             deck.set_key_image(key, PILHelper.to_native_key_format(deck, image))
-            
+
     except Exception as e:
         logger.exception(e)
+
 
 async def next_page(delta=1):
     global scences, scence_index, deck_keys, tasks
@@ -112,7 +131,7 @@ async def next_page(delta=1):
 
     scence_index = scence_index + delta
     if scence_index < 0:
-        scence_index =  len(scences) - 1
+        scence_index = len(scences) - 1
 
     if scence_index >= len(scences):
         scence_index = 0
@@ -120,41 +139,44 @@ async def next_page(delta=1):
     for index, p in enumerate(scences[scence_index]):
         tasks.append(asyncio.create_task(p.on_will_appear(deck_keys[index])))
 
+
 def cancel_tasks():
     global tasks
     for task in tasks:
         task.cancel()
     tasks = []
 
-async def start():    
-    streamdecks = DeviceManager().enumerate()    
+
+async def start():
+    streamdecks = DeviceManager().enumerate()
     print("Found {} Stream Deck(s).\n".format(len(streamdecks)))
     for index, deck in enumerate(streamdecks):
-        
-        print(f"Device {index+1} Class Name: {deck.__class__.__name__}, Model Type: {deck.__module__}")
+        print(
+            f"Device {index + 1} Class Name: {deck.__class__.__name__}, Model Type: {deck.__module__}"
+        )
         dm.set_device(deck)
         dm.open()
         dm.set_key_callback_async(key_change_callback)
-         
+
         for index, p in enumerate(scences[scence_index]):
-            deck_keys[index] = StreamPi (
-                deck = deck,
-                key = index
-            )
-            task = asyncio.create_task(p.on_will_appear(deck_keys[index]))        
+            deck_keys[index] = StreamPi(deck=deck, key=index)
+            task = asyncio.create_task(p.on_will_appear(deck_keys[index]))
             tasks.append(task)
         return
+
 
 class DeviceManagerDelegate:
     """
     物理设备的代理类，同时兼容StreamDeck和StreamDock
     """
+
     deck = None
+
     def __init__(self, device_model):
         self.device_model = device_model
-    
+
     def import_device_manager(self):
-        if self.device_model == 'streamdeck':
+        if self.device_model == "streamdeck":
             from StreamDeck.DeviceManager import DeviceManager
             from StreamDeck.ImageHelpers import PILHelper
         else:
@@ -169,10 +191,10 @@ class DeviceManagerDelegate:
         self.deck = deck
 
     async def set_bright_level(self, level=0):
-        if level == 0:        
+        if level == 0:
             StreamPi.lcd_off = True
             self.deck.set_brightness(0)
-        else:        
+        else:
             if StreamPi.lcd_off or level != StreamPi.bright_level:
                 StreamPi.lcd_off = False
                 StreamPi.set_bright_level(level)
@@ -181,21 +203,21 @@ class DeviceManagerDelegate:
     def set_key_callback_async(self, key_change_callback):
         self.deck.set_key_callback_async(key_change_callback)
 
-    #唤醒屏幕
+    # 唤醒屏幕
     async def screen_on(self):
         if self.deck.__module__.startswith("StreamDock"):
             self.deck.screen_On()
         else:
             await self.set_bright_level(60)
-        
-    #息屏
+
+    # 息屏
     async def screen_off(self):
         if self.deck.__module__.startswith("StreamDock"):
             self.deck.screen_Off()
         else:
             await self.set_bright_level(0)
 
-    #开启      
+    # 开启
     def open(self):
         if self.deck:
             self.deck.open()
@@ -206,24 +228,26 @@ class DeviceManagerDelegate:
                 self.deck.reset()
             self.deck.set_brightness(StreamPi.bright_level)
 
-    #关闭       
+    # 关闭
     def close(self):
-        if self.deck:   
+        if self.deck:
             # Close deck handle, terminating internal worker threads.
             print("====shutdown streampi===")
-            if self.deck.__module__.startswith("StreamDock"):         
+            if self.deck.__module__.startswith("StreamDock"):
                 self.deck.clearAllIcon()
             else:
                 self.deck.reset()
-                self.deck.set_brightness(0)            
+                self.deck.set_brightness(0)
             self.deck.close()
 
-config = load_json_file('./config.json')
+
+config = load_json_file("./config.json")
 scences = init_from_json(config)
 dm = DeviceManagerDelegate(config.get("device_model"))
 DeviceManager, PILHelper = dm.import_device_manager()
 
 if __name__ == "__main__":
     import uvloop
+
     uvloop.install()
     asyncio.run(start())
